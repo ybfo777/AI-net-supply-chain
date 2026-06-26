@@ -39,7 +39,12 @@
   .sub{color:var(--muted);font-size:13.5px;max-width:920px}
   .sub b{color:var(--accent)}
   .toolbar{
-    max-width:1500px;margin:14px auto 0;padding:0 28px;
+    position:sticky;top:0;z-index:35;
+    background:rgba(10,14,26,.93);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .toolbar-inner{
+    max-width:1500px;margin:0 auto;padding:11px 28px;
     display:flex;flex-wrap:wrap;gap:10px;align-items:center;
   }
   .search{
@@ -212,7 +217,7 @@
   @media(max-width:640px){
     .drawer{width:100%}
     header{padding:18px}
-    .toolbar,main,footer{padding-left:16px;padding-right:16px}
+    .toolbar-inner,main,footer{padding-left:16px;padding-right:16px}
   }
 </style>
 </head>
@@ -235,33 +240,10 @@
     <span><i style="background:var(--adv)"></i>中国主导 / 反制筹码</span>
     <span><i style="background:#fbbf24"></i>★ 行业龙头企业</span>
   </div>
-
-  <details class="policy">
-    <summary><span class="chev">▶</span><span class="pin">政策依据</span>构建"算力网"的核心政策与投资金额（已联网核实）</summary>
-    <div class="policy-body">
-      <ul>
-        <li><span class="doc">《关于深入实施"东数西算"工程加快构建全国一体化算力网的实施意见》</span>
-          —— 国家发改委等部门印发，首次以"<b>算力网</b>"统领全国算力一体化布局，是后续行动计划的总纲依据。</li>
-        <li><span class="doc">"东数西算"工程</span>（<a href="https://www.gov.cn/xinwen/2022-02/17/content_5674322.htm" target="_blank" rel="noopener">2022 年 2 月 17 日全面启动</a>，发改委、网信办、工信部、国家能源局）
-          —— 布局 <b>8 大国家算力枢纽节点 + 10 个数据中心集群</b>；据权威测算<b>每年带动投资约 4000 亿元人民币</b>，首批项目总投资即超 4000 亿元。</li>
-        <li><span class="doc">《算力基础设施高质量发展行动计划》</span> <span class="num">工信部联通信〔2023〕180 号</span>（<a href="https://www.gov.cn/zhengce/zhengceku/202310/content_6907900.htm" target="_blank" rel="noopener">六部门，2023-10</a>）
-          —— 目标：到 2025 年算力规模 <b>超 300 EFLOPS</b>、智能算力占比 <b>35%</b>、存储总量 <b>超 1800 EB</b>。</li>
-        <li><span class="doc">《算力互联互通行动计划》</span> <span class="num">工信部信管〔2025〕119 号</span>（<a href="https://www.gov.cn/zhengce/zhengceku/202505/content_7025968.htm" target="_blank" rel="noopener">工信部，2025-05</a>）
-          —— 让算力像水电一样流通：到 2028 年基本建成"<b>算力互联网</b>"。截至 2026 年 1 月，"1+M+N"节点体系已接入 31 省 155 家企业、316 EFLOPS 智算、72 万张 GPU。</li>
-      </ul>
-      <div class="note">
-        ⚠ 关于"几万亿美元"的说明：官方投资额均以<b>人民币</b>计——"东数西算"每年带动约 4000 亿元（≈550 亿美元），多年累计可达<b>万亿元人民币</b>量级；目前并无单一以"万亿美元"计的政策文件，"几万亿美元"系坊间对累计投资的夸大概括。
-      </div>
-    </div>
-  </details>
 </header>
 
-<section class="tlsection">
-  <div class="tl-head">政策演进时间线<span>2022 → 2026 · 从"东数西算"工程到"算力互联网"</span></div>
-  <div class="timeline-wrap"><div class="timeline" id="timeline"></div></div>
-</section>
-
 <div class="toolbar">
+ <div class="toolbar-inner">
   <div class="search">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a98b5" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
     <input id="q" type="text" autocomplete="off" placeholder="搜索并跳转：环节或企业名，如 光刻机 / 光刻胶 / 蔡司 / 稀土 / HBM">
@@ -281,7 +263,32 @@
     </select>
   </div>
   <div class="hint">提示：悬停看上下游 · 点击环节看详情 · 点击企业标签↗看股价</div>
+ </div>
 </div>
+
+<details class="policy">
+    <summary><span class="chev">▶</span><span class="pin">政策依据</span>构建"算力网"的核心政策与投资金额（已联网核实）</summary>
+    <div class="policy-body">
+      <ul>
+        <li><span class="doc">《关于深入实施"东数西算"工程加快构建全国一体化算力网的实施意见》</span>
+          —— 国家发改委等部门印发，首次以"<b>算力网</b>"统领全国算力一体化布局，是后续行动计划的总纲依据。</li>
+        <li><span class="doc">"东数西算"工程</span>（<a href="https://www.gov.cn/xinwen/2022-02/17/content_5674322.htm" target="_blank" rel="noopener">2022 年 2 月 17 日全面启动</a>，发改委、网信办、工信部、国家能源局）
+          —— 布局 <b>8 大国家算力枢纽节点 + 10 个数据中心集群</b>；据权威测算<b>每年带动投资约 4000 亿元人民币</b>，首批项目总投资即超 4000 亿元。</li>
+        <li><span class="doc">《算力基础设施高质量发展行动计划》</span> <span class="num">工信部联通信〔2023〕180 号</span>（<a href="https://www.gov.cn/zhengce/zhengceku/202310/content_6907900.htm" target="_blank" rel="noopener">六部门，2023-10</a>）
+          —— 目标：到 2025 年算力规模 <b>超 300 EFLOPS</b>、智能算力占比 <b>35%</b>、存储总量 <b>超 1800 EB</b>。</li>
+        <li><span class="doc">《算力互联互通行动计划》</span> <span class="num">工信部信管〔2025〕119 号</span>（<a href="https://www.gov.cn/zhengce/zhengceku/202505/content_7025968.htm" target="_blank" rel="noopener">工信部，2025-05</a>）
+          —— 让算力像水电一样流通：到 2028 年基本建成"<b>算力互联网</b>"。截至 2026 年 1 月，"1+M+N"节点体系已接入 31 省 155 家企业、316 EFLOPS 智算、72 万张 GPU。</li>
+      </ul>
+      <div class="note">
+        ⚠ 关于"几万亿美元"的说明：官方投资额均以<b>人民币</b>计——"东数西算"每年带动约 4000 亿元（≈550 亿美元），多年累计可达<b>万亿元人民币</b>量级；目前并无单一以"万亿美元"计的政策文件，"几万亿美元"系坊间对累计投资的夸大概括。
+      </div>
+    </div>
+  </details>
+
+<section class="tlsection">
+  <div class="tl-head">政策演进时间线<span>2022 → 2026 · 从"东数西算"工程到"算力互联网"</span></div>
+  <div class="timeline-wrap"><div class="timeline" id="timeline"></div></div>
+</section>
 
 <main>
   <div class="stage">
