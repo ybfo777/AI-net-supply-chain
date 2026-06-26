@@ -155,6 +155,30 @@
     background:rgba(20,184,166,.08);border-radius:0 8px 8px 0;color:#a7d8d0}
   .policy-body a{color:var(--accent);text-decoration:none}
   .policy-body a:hover{text-decoration:underline}
+
+  /* ===== 政策演进时间线 ===== */
+  .tlsection{max-width:1500px;margin:18px auto 0;padding:0 28px}
+  .tl-head{font-size:16px;font-weight:600;margin-bottom:2px}
+  .tl-head span{font-size:12.5px;color:var(--muted);font-weight:400;margin-left:8px}
+  .timeline-wrap{overflow-x:auto;padding:14px 2px 6px;scrollbar-width:thin}
+  .timeline{position:relative;display:flex;gap:0;min-width:920px}
+  .timeline::before{content:"";position:absolute;left:0;right:0;top:46px;height:2px;
+    background:linear-gradient(90deg,#3b82f6,#6366f1,#8b5cf6,#a855f7,#ec4899,#14b8a6)}
+  .tl-item{position:relative;flex:1 1 0;padding:0 10px;min-width:150px}
+  .tl-date{font-size:12.5px;font-weight:700;color:var(--text);height:20px}
+  .tl-node{height:26px;display:flex;align-items:center}
+  .tl-dot{width:14px;height:14px;border-radius:50%;background:var(--tc);border:3px solid var(--bg);
+    box-shadow:0 0 0 2px var(--tc);position:relative;z-index:2}
+  .tl-card{margin-top:8px;background:var(--panel);border:1px solid var(--line);border-radius:11px;
+    padding:11px 12px;border-top:3px solid var(--tc);transition:.16s;cursor:default}
+  .tl-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.35);border-color:var(--tc)}
+  .tl-tag{display:inline-block;font-size:10.5px;font-weight:700;color:#0a0e1a;background:var(--tc);
+    padding:2px 8px;border-radius:6px;margin-bottom:7px}
+  .tl-title{font-size:13.5px;font-weight:600;line-height:1.35;margin-bottom:5px}
+  .tl-num{font-size:11px;color:#fbbf24;font-family:ui-monospace,Menlo,monospace;margin-bottom:6px;word-break:break-all}
+  .tl-org{font-size:11px;color:var(--muted);margin-bottom:6px}
+  .tl-pt{font-size:11.5px;color:#c7d2e6;line-height:1.5}
+  @media(max-width:640px){.tlsection{padding-left:16px;padding-right:16px}}
   @media(max-width:640px){
     .drawer{width:100%}
     header{padding:18px}
@@ -200,6 +224,11 @@
     </div>
   </details>
 </header>
+
+<section class="tlsection">
+  <div class="tl-head">政策演进时间线<span>2022 → 2026 · 从"东数西算"工程到"算力互联网"</span></div>
+  <div class="timeline-wrap"><div class="timeline" id="timeline"></div></div>
+</section>
 
 <div class="toolbar">
   <div class="search">
@@ -259,6 +288,44 @@ const LAYERS = [
   {id:6,tag:"底层",title:"核心原料与战略资源层",color:"--L6",
    desc:"供应链最底端的元素与矿产——既是被卡的源头，也是中国反制的筹码"},
 ];
+
+/* ===== 政策演进时间线（均经联网核实）===== */
+const POLICIES = [
+  {date:"2022.02", color:"#3b82f6", tag:"工程启动", title:'"东数西算"工程全面启动',
+   org:"发改委·网信办·工信部·能源局", num:"",
+   pt:"布局 8 大国家算力枢纽 + 10 个数据中心集群，每年带动投资约 4000 亿元，算力网建设拉开序幕。"},
+  {date:"2023.10", color:"#6366f1", tag:"顶层规划", title:"《算力基础设施高质量发展行动计划》",
+   org:"工信部等六部门", num:"工信部联通信〔2023〕180号",
+   pt:"定量目标：到 2025 年算力 >300 EFLOPS、智能算力占比 35%、存储总量 >1800 EB。"},
+  {date:"2023.12", color:"#8b5cf6", tag:"算力网总纲", title:'《深入实施"东数西算"加快构建全国一体化算力网的实施意见》',
+   org:"发改委·国家数据局等五部门", num:"发改数据〔2023〕1779号",
+   pt:'首次以"算力网"统领全国算力一体化布局，是后续各项行动计划的总纲依据。'},
+  {date:"2025.01", color:"#a855f7", tag:"数据底座", title:"《国家数据基础设施建设指引》",
+   org:"发改委·国家数据局·工信部", num:"发改数据〔2024〕1853号",
+   pt:"从算力底座、网络支撑等四方向布局；到 2029 年基本建成国家数据基础设施主体结构。"},
+  {date:"2025.05", color:"#ec4899", tag:"互联互通", title:"《算力互联互通行动计划》",
+   org:"工业和信息化部", num:"工信部信管〔2025〕119号",
+   pt:'让算力像水电一样流通：到 2026 年建成互联标准体系，2028 年基本建成"算力互联网"。'},
+  {date:"2026.01", color:"#14b8a6", tag:"落地进展", title:'"1+M+N"节点体系成形',
+   org:"国家算力互联网服务平台", num:"",
+   pt:"已接入 31 省 155 家企业、578 个资源池、316 EFLOPS 智算、72 万张 GPU、超千万算力标识。"},
+];
+const tl=document.getElementById("timeline");
+POLICIES.forEach(p=>{
+  const el=document.createElement("div");
+  el.className="tl-item";el.style.setProperty("--tc",p.color);
+  el.innerHTML=`
+    <div class="tl-date">${p.date}</div>
+    <div class="tl-node"><span class="tl-dot"></span></div>
+    <div class="tl-card">
+      <span class="tl-tag">${p.tag}</span>
+      <div class="tl-title">${p.title}</div>
+      ${p.num?`<div class="tl-num">${p.num}</div>`:""}
+      <div class="tl-org">${p.org}</div>
+      <div class="tl-pt">${p.pt}</div>
+    </div>`;
+  tl.appendChild(el);
+});
 
 const NODES = [
   /* ---------- L1 下游 ---------- */
