@@ -17,6 +17,9 @@
     --L2:#10b981; /* 中游 基础设施设备 */
     --L3:#f59e0b; /* 上游 核心芯片元器件 */
     --L4:#ef4444; /* 基石 半导体供应链 */
+    --L5:#a855f7; /* 深层 设备零部件与高端材料 */
+    --L6:#ec4899; /* 底层 核心原料与战略资源 */
+    --adv:#14b8a6; /* 中国主导/反制 */
     --dim:0.18;
   }
   *{box-sizing:border-box}
@@ -59,6 +62,7 @@
   .chip.active[data-f="bottleneck"]{background:#ef4444}
   .chip.active[data-f="reset"]{background:#334155}
   .chip.active[data-f="local"]{background:#10b981}
+  .chip.active[data-f="advantage"]{background:#14b8a6}
   .hint{color:var(--muted);font-size:12px;margin-left:auto;align-self:center}
 
   main{max-width:1500px;margin:8px auto 60px;padding:6px 28px 0;position:relative}
@@ -92,6 +96,7 @@
   .node-name{font-size:14.5px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:6px}
   .node-name .bn{font-size:10px;background:#ef4444;color:#fff;padding:1px 6px;border-radius:6px;font-weight:700}
   .node-name .lc{font-size:10px;background:#10b981;color:#04211a;padding:1px 6px;border-radius:6px;font-weight:700}
+  .node-name .adv{font-size:10px;background:#14b8a6;color:#042420;padding:1px 6px;border-radius:6px;font-weight:700}
   .node-mini{font-size:11.5px;color:var(--muted);line-height:1.45;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .tags{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px}
@@ -146,25 +151,30 @@
   <h1>算力网产业结构互动图</h1>
   <div class="sub">
     围绕国家"<b>东数西算</b>"工程与新一轮万亿级算力网投资，按 <b>下游 → 上游</b> 的顺序拆解算力网产业链：
-    从<b>数据中心与算力服务</b>，到<b>基础设施与设备</b>，再到<b>核心芯片与元器件</b>，最终落到<b>半导体供应链基石</b>。
-    点击任一环节查看详情；悬停可高亮其上下游关联；红标为<b style="color:#ff6b6b">卡脖子</b>环节。
+    从<b>数据中心与算力服务</b>，到<b>基础设施与设备</b>，再到<b>核心芯片与元器件</b>、<b>半导体供应链基石</b>，
+    并进一步下钻到<b>设备核心零部件、高端材料</b>与最底层的<b>核心原料与战略资源</b>，定位真正的卡脖子节点。
+    点击任一环节查看详情；悬停可高亮其上下游关联；红标为<b style="color:#ff6b6b">卡脖子</b>，青标为中国<b style="color:#2dd4bf">主导/反制</b>环节。
   </div>
   <div class="legend">
     <span><i style="background:var(--L1)"></i>下游 · 应用与算力服务</span>
     <span><i style="background:var(--L2)"></i>中游 · 基础设施与设备</span>
     <span><i style="background:var(--L3)"></i>上游 · 核心芯片与元器件</span>
     <span><i style="background:var(--L4)"></i>基石 · 半导体供应链</span>
+    <span><i style="background:var(--L5)"></i>深层 · 设备零部件与高端材料</span>
+    <span><i style="background:var(--L6)"></i>底层 · 核心原料与战略资源</span>
+    <span><i style="background:var(--adv)"></i>中国主导 / 反制筹码</span>
   </div>
 </header>
 
 <div class="toolbar">
   <div class="search">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a98b5" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-    <input id="q" type="text" placeholder="搜索环节或企业，如 昇腾 / HBM / 光模块 / 中芯国际">
+    <input id="q" type="text" placeholder="搜索环节或企业，如 光刻机 / 光刻胶 / 蔡司 / 稀土 / HBM">
   </div>
   <div class="filters">
     <div class="chip" data-f="bottleneck">⚠ 只看卡脖子环节</div>
     <div class="chip" data-f="local">国产化突破环节</div>
+    <div class="chip" data-f="advantage">★ 中国主导/反制</div>
     <div class="chip" data-f="reset">重置</div>
   </div>
   <div class="hint">提示：悬停看上下游 · 点击看详情</div>
@@ -178,7 +188,7 @@
 </main>
 
 <footer>
-  数据为产业结构示意，代表企业列举不构成投资建议；标注的"国产化/卡脖子"为公开行业共识的概括。<br>
+  数据为产业结构示意，代表企业列举不构成投资建议；标注的"卡脖子 / 国产突破 / 中国主导"为公开行业共识的概括。<br>
   企业标签后括号：A=A股，HK=港股，US=美股，PRI=非上市/政府平台，FOR=海外厂商。
 </footer>
 
@@ -195,9 +205,9 @@
 
 <script>
 /* ============== 产业链数据模型 ==============
-   layer: 1 下游 / 2 中游 / 3 上游 / 4 基石
-   up: 该环节的上游(更靠近芯片/材料)节点 id —— 用于连线与高亮
-   bottleneck: 卡脖子；local: 国产化已有显著突破
+   layer: 1 下游 / 2 中游 / 3 上游 / 4 基石 / 5 深层(零部件·高端材料) / 6 底层(原料·战略资源)
+   up: 该环节的上游(更靠近原料/元素)节点 id —— 用于连线与高亮
+   bottleneck: 卡脖子；local: 国产化已有显著突破；advantage: 中国主导/反制筹码
 */
 const LAYERS = [
   {id:1,tag:"下游",title:"应用与算力服务层",color:"--L1",
@@ -208,6 +218,10 @@ const LAYERS = [
    desc:"决定算力性能与成本的核心器件，AI 芯片与高带宽存储是焦点"},
   {id:4,tag:"基石",title:"半导体供应链层",color:"--L4",
    desc:"制造芯片所需的代工、封装、设备、材料与工具，国产替代主战场"},
+  {id:5,tag:"深层",title:"设备核心零部件与高端材料层",color:"--L5",
+   desc:"基石之下的真正卡点：光刻机光源/镜头、精密零部件与高端晶圆材料"},
+  {id:6,tag:"底层",title:"核心原料与战略资源层",color:"--L6",
+   desc:"供应链最底端的元素与矿产——既是被卡的源头，也是中国反制的筹码"},
 ];
 
 const NODES = [
@@ -327,12 +341,12 @@ const NODES = [
    mini:"光刻/刻蚀/沉积/量测设备，光刻机是最硬的卡点。", bottleneck:true,
    role:"制造芯片的“母机”。EUV/高端 DUV 光刻机被 ASML 垄断且对华禁运，刻蚀/沉积等环节国产已实现突破。",
    companies:[["ASML","FOR"],["北方华创","A"],["中微公司","A"],["上海微电子","PRI"],["拓荆科技","A"]],
-   up:["material_basic"]},
+   up:["litho_source","optics","stage","rf_power","vac_pump","esc_ceramic","valve_mfc"]},
   {id:"material_chip", layer:4, name:"半导体材料",
    mini:"硅片、光刻胶、电子特气、CMP 等晶圆制造材料。", bottleneck:true,
    role:"晶圆制造的“耗材”。高端光刻胶、大硅片仍依赖进口，国产电子特气、CMP 抛光等已逐步替代。",
    companies:[["沪硅产业","A"],["彤程新材","A"],["华特气体","A"],["安集科技","A"]],
-   up:["material_basic"]},
+   up:["wafer","photoresist","mask","egas","cmp_mat","sputter_target"]},
   {id:"eda", layer:4, name:"EDA 设计工具",
    mini:"芯片设计软件，三大海外厂商主导，国产追赶中。", bottleneck:true,
    role:"芯片设计的“画笔”。Synopsys/Cadence/西门子三足鼎立，国产华大九天等在部分点工具实现可用替代。",
@@ -344,16 +358,120 @@ const NODES = [
    companies:[["ARM","FOR"],["RISC-V生态","PRI"],["芯原股份","A"]],
    up:[]},
   {id:"material_basic", layer:4, name:"基础材料 / 金属",
-   mini:"铜、铝、稀土、特种工程塑料等上游原材料。",
-   role:"产业链最底层的大宗与特种材料，支撑 PCB、散热、设备与材料制造。",
+   mini:"铜、铝、特种工程塑料等上游大宗原材料。",
+   role:"支撑 PCB、散热、结构件的大宗与特种材料，进一步追溯到底层金属与化工原料。",
    companies:[["多家有色/化工","A"]],
+   up:["high_purity_metal"]},
+
+  /* ---------- L5 深层：设备核心零部件与高端材料 ---------- */
+  {id:"litho_source", layer:5, name:"光刻机光源 / 激光器",
+   mini:"EUV 光源(13.5nm)与 DUV 准分子激光，光刻机的“发动机”。", bottleneck:true,
+   role:"EUV 用 LPP 锡等离子体光源(Cymer/ASML 自有)，DUV 用 ArF/KrF 准分子激光，是光刻机最核心且对华禁运的部件，国产仍在攻坚。",
+   companies:[["Cymer(ASML)","FOR"],["Gigaphoton","FOR"],["科益虹源","PRI"]],
+   up:["rare_gas","fluorite"]},
+  {id:"optics", layer:5, name:"光学镜头 / 镜片系统",
+   mini:"光刻机投影物镜，纳米级面型精度，全球仅蔡司可造。", bottleneck:true,
+   role:"光刻机的“眼睛”，决定分辨率极限。蔡司(Zeiss)独家供应 ASML 高端镜头，是全产业链最难攻克的卡点之一，原料用超纯萤石(氟化钙)。",
+   companies:[["蔡司 Zeiss","FOR"],["国望光学","PRI"],["福光股份","A"]],
+   up:["fluorite","high_purity_metal"]},
+  {id:"stage", layer:5, name:"精密双工件台 / 运动平台",
+   mini:"纳米级定位的晶圆工件台，光刻机的“运动中枢”。", bottleneck:true,
+   role:"实现纳米级同步曝光的超精密运动系统，技术壁垒极高，国产光刻机攻坚的关键子系统之一。",
+   companies:[["华卓精科","PRI"],["ASML自研","FOR"]],
+   up:["high_purity_metal"]},
+  {id:"rf_power", layer:5, name:"射频电源 / 匹配器",
+   mini:"刻蚀、沉积设备的等离子体激励源。", bottleneck:true,
+   role:"刻蚀/PECVD 等设备产生等离子体的核心电源，长期由 AE/MKS 主导，国产英杰电气等加速替代。",
+   companies:[["AE(Advanced Energy)","FOR"],["MKS","FOR"],["英杰电气","A"]],
+   up:["high_purity_metal"]},
+  {id:"vac_pump", layer:5, name:"真空泵 / 干泵",
+   mini:"半导体工艺腔体的真空环境保障。",
+   role:"为刻蚀、沉积、离子注入提供高/超高真空，海外 Edwards/Pfeiffer 主导，国产中科科仪等切入。",
+   companies:[["Edwards","FOR"],["Pfeiffer","FOR"],["中科科仪","PRI"]],
+   up:["high_purity_metal"]},
+  {id:"esc_ceramic", layer:5, name:"静电吸盘 / 精密陶瓷件",
+   mini:"晶圆承载与温控的核心陶瓷部件(ESC、Focus Ring)。", bottleneck:true,
+   role:"刻蚀腔内承载并精密控温晶圆的关键耗材部件，日美企业主导，国产精密陶瓷正逐步突破。",
+   companies:[["新美亚/Shinko","FOR"],["京瓷","FOR"],["国瓷材料","A"]],
+   up:["high_purity_metal","graphite"]},
+  {id:"valve_mfc", layer:5, name:"精密阀门 / 质量流量计",
+   mini:"工艺气体精密输送与流量控制(MFC)。",
+   role:"控制工艺气体流量与压力的精密部件，MKS/Brooks 主导，国产七星华创等部分替代。",
+   companies:[["MKS","FOR"],["Brooks","FOR"],["北方华创(七星)","A"]],
+   up:["high_purity_metal"]},
+  {id:"wafer", layer:5, name:"大硅片 (12 英寸)",
+   mini:"芯片的“地基”衬底，高端 12 寸国产化率低。", bottleneck:true,
+   role:"所有芯片的基础衬底。12 英寸大硅片由信越、SUMCO 等日企垄断，国产沪硅产业等在追赶但高端仍依赖进口。",
+   companies:[["信越化学","FOR"],["SUMCO","FOR"],["沪硅产业","A"],["TCL中环","A"]],
+   up:["polysilicon"]},
+  {id:"photoresist", layer:5, name:"高端光刻胶 (EUV/ArF)",
+   mini:"把电路图案转印到晶圆的感光材料，高端几乎全进口。", bottleneck:true,
+   role:"光刻工艺的核心耗材。EUV/ArF 高端光刻胶被日本 JSR、信越、东京应化垄断，是国产化差距最大的材料之一。",
+   companies:[["JSR","FOR"],["东京应化 TOK","FOR"],["信越","FOR"],["南大光电","A"],["彤程新材","A"]],
+   up:["fluorite","rare_gas"]},
+  {id:"mask", layer:5, name:"光掩模 / 掩膜版",
+   mini:"芯片电路的“母版”，高端掩膜与基板受限。", bottleneck:true,
+   role:"光刻图形的母版。高端掩膜版及其石英基板、EUV 防护膜(pellicle)技术由日美主导，国产路维光电等突破中。",
+   companies:[["Photronics","FOR"],["凸版 Toppan","FOR"],["路维光电","A"],["清溢光电","A"]],
+   up:["high_purity_metal"]},
+  {id:"egas", layer:5, name:"电子特气",
+   mini:"刻蚀、沉积、掺杂用的高纯特种气体。", local:true,
+   role:"晶圆制造的“血液”，品类繁多。国产华特气体、金宏气体等已实现多品种替代，高纯品仍部分依赖进口。",
+   companies:[["华特气体","A"],["金宏气体","A"],["林德/液空","FOR"]],
+   up:["rare_gas","fluorite"]},
+  {id:"cmp_mat", layer:5, name:"CMP 抛光材料",
+   mini:"化学机械抛光用的抛光液与抛光垫。", local:true,
+   role:"晶圆平坦化的关键耗材。抛光液(含铈基稀土磨料)与抛光垫，国产安集科技、鼎龙股份已实现规模替代。",
+   companies:[["安集科技","A"],["鼎龙股份","A"],["卡博特/陶氏","FOR"]],
+   up:["rare_earth","high_purity_metal"]},
+  {id:"sputter_target", layer:5, name:"溅射靶材",
+   mini:"PVD 镀膜用的高纯金属靶材。", local:true,
+   role:"芯片金属互连/封装镀膜的原料，国产江丰电子、有研新材已进入主流供应链。",
+   companies:[["江丰电子","A"],["有研新材","A"],["霍尼韦尔","FOR"]],
+   up:["high_purity_metal"]},
+
+  /* ---------- L6 底层：核心原料与战略资源 ---------- */
+  {id:"polysilicon", layer:6, name:"电子级多晶硅",
+   mini:"提纯至 11 个 9 的超高纯硅，大硅片的源头。", bottleneck:true,
+   role:"半导体级多晶硅纯度要求远高于光伏级，高端料长期依赖进口，国产鑫华半导体等爬坡中。",
+   companies:[["瓦克 Wacker","FOR"],["信越","FOR"],["鑫华半导体","PRI"]],
+   up:[]},
+  {id:"rare_gas", layer:6, name:"稀有气体 (氖/氪/氙)",
+   mini:"准分子激光与光刻、刻蚀用稀有气体。", advantage:true,
+   role:"光刻光源与刻蚀的关键气体。氖气曾高度依赖乌克兰，地缘冲突后中国大幅扩产，已成全球重要供应方。",
+   companies:[["中船特气","A"],["凯美特气","A"],["华特气体","A"]],
+   up:[]},
+  {id:"rare_earth", layer:6, name:"稀土",
+   mini:"抛光粉、磁材、催化的战略元素，中国全球主导。", advantage:true,
+   role:"中国掌握全球稀土开采与冶炼分离的主导地位，是 CMP 抛光粉、永磁电机的源头，也是对外反制的核心筹码。",
+   companies:[["北方稀土","A"],["中国稀土","A"],["盛和资源","A"]],
+   up:[]},
+  {id:"gallium_germanium", layer:6, name:"镓 / 锗",
+   mini:"第三代半导体与光电关键元素，中国实施出口管制。", advantage:true,
+   role:"镓(GaN/GaAs)、锗(光纤/红外/衬底)是关键小金属，中国产量全球主导并已纳入出口管制，是典型反制筹码。",
+   companies:[["云南锗业","A"],["驰宏锌锗","A"],["中金岭南","A"]],
+   up:[]},
+  {id:"graphite", layer:6, name:"高纯石墨 / 碳材料",
+   mini:"半导体热场、单晶炉部件用高纯石墨。", advantage:true,
+   role:"单晶硅生长热场、刻蚀部件等所需高纯/等静压石墨，中国资源与产能占优，亦被列入出口管制。",
+   companies:[["方大炭素","A"],["中钢洛耐","A"]],
+   up:[]},
+  {id:"fluorite", layer:6, name:"萤石 / 氟化工",
+   mini:"高端光学镜片、光刻胶、特气的氟源。", advantage:true,
+   role:"萤石(氟化钙)是超纯光学镜片原料与含氟电子材料(光刻胶、特气)的氟源头，中国储量与产量全球领先。",
+   companies:[["金石资源","A"],["巨化股份","A"]],
+   up:[]},
+  {id:"high_purity_metal", layer:6, name:"高纯金属 (钽/钴/铜)",
+   mini:"互连、靶材、精密部件用高纯金属与合金。",
+   role:"芯片互连(铜)、靶材(钽/钛)、精密结构件所需的高纯金属与特种合金，部分高端品类仍依赖进口提纯。",
+   companies:[["有研新材","A"],["东方钽业","A"],["云南铜业","A"]],
    up:[]},
 ];
 
 /* ============== 渲染 ============== */
 const nodeById = Object.fromEntries(NODES.map(n=>[n.id,n]));
-const layerColor = {1:"var(--L1)",2:"var(--L2)",3:"var(--L3)",4:"var(--L4)"};
-const layerColorHex = {1:"#3b82f6",2:"#10b981",3:"#f59e0b",4:"#ef4444"};
+const layerColor = {1:"var(--L1)",2:"var(--L2)",3:"var(--L3)",4:"var(--L4)",5:"var(--L5)",6:"var(--L6)"};
+const layerColorHex = {1:"#3b82f6",2:"#10b981",3:"#f59e0b",4:"#ef4444",5:"#a855f7",6:"#ec4899"};
 const regName = {A:"A股","A/HK":"A+H","A/US":"A/美","US":"美股","US/HK":"美/港","US/FOR":"美/外","HK":"港股","PRI":"未上市","FOR":"海外"};
 
 // 反向索引：down[x] = 哪些节点把 x 当作上游
@@ -373,7 +491,7 @@ LAYERS.forEach(L=>{
     </div>
     <div class="nodes" id="layer-${L.id}"></div>`;
   layersEl.appendChild(sec);
-  if(L.id<4){
+  if(L.id<LAYERS.length){
     const band=document.createElement("div");
     band.className="arrow-band";
     band.textContent="▲ 向上游采购 ／ 向下游供货 ▼";
@@ -386,7 +504,7 @@ NODES.forEach(n=>{
   const el=document.createElement("div");
   el.className="node";el.dataset.id=n.id;
   el.style.setProperty("--c",layerColor[n.layer]);
-  const badges=(n.bottleneck?'<span class="bn">卡脖子</span>':'')+(n.local?'<span class="lc">国产突破</span>':'');
+  const badges=(n.bottleneck?'<span class="bn">卡脖子</span>':'')+(n.local?'<span class="lc">国产突破</span>':'')+(n.advantage?'<span class="adv">中国主导</span>':'');
   el.innerHTML=`
     <div class="node-name">${n.name}${badges}</div>
     <div class="node-mini">${n.mini}</div>
@@ -455,19 +573,21 @@ function applyFilter(){
   const term=q.value.trim().toLowerCase();
   const onlyBN=document.querySelector('.chip[data-f="bottleneck"]').classList.contains("active");
   const onlyLocal=document.querySelector('.chip[data-f="local"]').classList.contains("active");
-  filterActive = !!term || onlyBN || onlyLocal;
+  const onlyAdv=document.querySelector('.chip[data-f="advantage"]').classList.contains("active");
+  filterActive = !!term || onlyBN || onlyLocal || onlyAdv;
   if(!filterActive){clearHL();return;}
   document.querySelectorAll(".node").forEach(el=>{
     const n=nodeById[el.dataset.id];
     let ok=true;
     if(onlyBN) ok=ok&&!!n.bottleneck;
     if(onlyLocal) ok=ok&&!!n.local;
+    if(onlyAdv) ok=ok&&!!n.advantage;
     if(term){
       const hay=(n.name+n.mini+n.role+n.companies.map(c=>c[0]).join("")).toLowerCase();
       ok=ok&&hay.includes(term);
     }
     el.classList.toggle("dim",!ok);
-    el.classList.toggle("hit",ok&&(!!term||onlyBN||onlyLocal));
+    el.classList.toggle("hit",ok&&(!!term||onlyBN||onlyLocal||onlyAdv));
     el.classList.remove("active");
   });
   svg.querySelectorAll("path").forEach(p=>p.setAttribute("opacity","0.05"));
@@ -493,7 +613,8 @@ function openDrawer(id){
   document.getElementById("d-layer").textContent=`${L.tag} · ${L.title}`;
   document.getElementById("d-layer").style.background=Lc;
   const badges=(n.bottleneck?'<span class="bn" style="font-size:11px;background:#ef4444;color:#fff;padding:2px 8px;border-radius:7px">卡脖子</span>':'')+
-               (n.local?'<span class="lc" style="font-size:11px;background:#10b981;color:#04211a;padding:2px 8px;border-radius:7px">国产突破</span>':'');
+               (n.local?'<span class="lc" style="font-size:11px;background:#10b981;color:#04211a;padding:2px 8px;border-radius:7px">国产突破</span>':'')+
+               (n.advantage?'<span class="adv" style="font-size:11px;background:#14b8a6;color:#042420;padding:2px 8px;border-radius:7px">中国主导</span>':'');
   document.getElementById("d-title").innerHTML=n.name+" "+badges;
 
   const ups=(n.up||[]).map(u=>nodeById[u]);
