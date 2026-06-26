@@ -51,6 +51,22 @@
   }
   .search input:focus{border-color:var(--accent)}
   .search svg{position:absolute;left:10px;top:9px;opacity:.6}
+  .suggest{position:absolute;top:42px;left:0;right:0;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:10px;box-shadow:0 14px 34px rgba(0,0,0,.55);z-index:30;max-height:360px;overflow-y:auto;display:none}
+  .suggest.show{display:block}
+  .sug-item{display:flex;align-items:center;gap:9px;padding:8px 11px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)}
+  .sug-item:last-child{border-bottom:none}
+  .sug-item:hover,.sug-item.active{background:#1a2540}
+  .sug-type{font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;flex-shrink:0}
+  .sug-type.node{background:#1e3a8a;color:#bfdbfe}
+  .sug-type.company{background:#3a2a00;color:#fcd34d}
+  .sug-label{font-size:13px;color:var(--text)}
+  .sug-label b{color:var(--accent)}
+  .sug-lead{color:#fbbf24;font-size:11px}
+  .sug-sub{font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap;flex-shrink:0}
+  .sug-empty{padding:12px;color:var(--muted);font-size:12.5px;text-align:center}
+  .node.flash{animation:flash 1.4s ease}
+  @keyframes flash{0%,100%{box-shadow:none}18%,62%{box-shadow:0 0 0 3px #fbbf24,0 0 22px rgba(251,191,36,.55)}}
   .filters{display:flex;gap:8px;flex-wrap:wrap}
   .chip{
     background:var(--panel);border:1px solid var(--line);color:var(--muted);
@@ -106,6 +122,9 @@
   a.tag.slink:hover{border-color:var(--accent);color:#fff;background:#16233c}
   .tag.unlisted{opacity:.65}
   .slink .ext{opacity:.5;font-size:9px;margin-left:2px}
+  .lead-star{color:#fbbf24;margin-right:2px;font-size:10px}
+  a.tag.slink.lead,.tag.unlisted.lead{border-color:rgba(251,191,36,.4)}
+  .lead-pill{font-size:9.5px;background:#fbbf24;color:#3a2a00;font-weight:700;padding:1px 6px;border-radius:5px;margin-left:6px}
   .stocksel{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
   .stocksel select{background:var(--panel);border:1px solid var(--line);color:var(--text);
     border-radius:8px;padding:6px 9px;font-size:12.5px;outline:none;cursor:pointer}
@@ -214,6 +233,7 @@
     <span><i style="background:var(--L5)"></i>深层 · 设备零部件与高端材料</span>
     <span><i style="background:var(--L6)"></i>底层 · 核心原料与战略资源</span>
     <span><i style="background:var(--adv)"></i>中国主导 / 反制筹码</span>
+    <span><i style="background:#fbbf24"></i>★ 行业龙头企业</span>
   </div>
 
   <details class="policy">
@@ -244,7 +264,8 @@
 <div class="toolbar">
   <div class="search">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a98b5" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-    <input id="q" type="text" placeholder="搜索环节或企业，如 光刻机 / 光刻胶 / 蔡司 / 稀土 / HBM">
+    <input id="q" type="text" autocomplete="off" placeholder="搜索并跳转：环节或企业名，如 光刻机 / 光刻胶 / 蔡司 / 稀土 / HBM">
+    <div class="suggest" id="suggest"></div>
   </div>
   <div class="filters">
     <div class="chip" data-f="bottleneck">⚠ 只看卡脖子环节</div>
@@ -626,6 +647,21 @@ const TICKERS = {
   "方大炭素":"600516.SS","金石资源":"603505.SS","巨化股份":"600160.SS","东方钽业":"000962.SZ","云南铜业":"000878.SZ"
 };
 
+/* ===== 行业龙头（各环节全球或国内领军企业）===== */
+const LEADERS = new Set([
+  // 下游 / 中游
+  "阿里云","中国移动","万国数据","浪潮信息","新华三","中际旭创","华为存储","英维克","科华数据","宝信软件",
+  // 上游芯片
+  "英伟达","华为昇腾","Intel","海光信息","SK海力士","长江存储","源杰科技","博通","斯达半导","沪电股份",
+  // 基石
+  "台积电","中芯国际","长电科技","ASML","北方华创","Synopsys","华大九天","ARM",
+  // 深层零部件与材料
+  "蔡司 Zeiss","Cymer(ASML)","华卓精科","AE(Advanced Energy)","Edwards","MKS","信越化学","沪硅产业",
+  "JSR","Photronics","华特气体","安集科技","江丰电子",
+  // 底层资源
+  "瓦克 Wacker","北方稀土","云南锗业","方大炭素","金石资源","有研新材"
+]);
+
 let provider = localStorage.getItem("stockProvider") || "yahoo";
 function yahooToXueqiu(t){
   if(/\.SS$/.test(t)) return "SH"+t.replace(".SS","");
@@ -644,16 +680,20 @@ function stockURL(name){
            : `https://finance.yahoo.com/lookup/?s=${encodeURIComponent(name)}`;
 }
 function companyChip(c, kind){
-  const name=c[0], reg=c[1], listed=reg!=="PRI";
+  const name=c[0], reg=c[1];
+  const hasStock=!!TICKERS[name];          // 只有确有股票代码才给跳转链接（未上市/无可靠股价页的不加链接）
+  const lead=LEADERS.has(name);
+  const star=lead?'<span class="lead-star" title="行业龙头">★</span>':'';
+  const pill=lead?'<span class="lead-pill" title="行业龙头">龙头</span>':'';
   if(kind==="tag"){
-    return listed
-      ? `<a class="tag slink" data-stock="${name}" href="${stockURL(name)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${name}<span class="ext">↗</span></a>`
-      : `<span class="tag unlisted">${name}</span>`;
+    return hasStock
+      ? `<a class="tag slink${lead?' lead':''}" data-stock="${name}" href="${stockURL(name)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${star}${name}<span class="ext">↗</span></a>`
+      : `<span class="tag unlisted${lead?' lead':''}">${star}${name}</span>`;
   }
   const regHTML=`<span class="reg">${regName[reg]||reg}</span>`;
-  return listed
-    ? `<a class="company slink" data-stock="${name}" href="${stockURL(name)}" target="_blank" rel="noopener">${name}${regHTML}<span class="ext">↗</span></a>`
-    : `<span class="company unlisted">${name}${regHTML}</span>`;
+  return hasStock
+    ? `<a class="company slink" data-stock="${name}" href="${stockURL(name)}" target="_blank" rel="noopener">${name}${pill}${regHTML}<span class="ext">↗</span></a>`
+    : `<span class="company unlisted">${name}${pill}${regHTML}</span>`;
 }
 function refreshStockLinks(){
   document.querySelectorAll("[data-stock]").forEach(a=>{ a.href=stockURL(a.getAttribute("data-stock")); });
@@ -798,6 +838,69 @@ provSel.addEventListener("change",()=>{
   refreshStockLinks();
 });
 
+/* ====== 搜索导航（按环节名 / 公司名跳转到详情）====== */
+const suggestBox=document.getElementById("suggest");
+const searchIndex=[];
+NODES.forEach(n=>searchIndex.push({type:"node",label:n.name,sub:LAYERS.find(l=>l.id===n.layer).tag,id:n.id,lead:false}));
+NODES.forEach(n=>n.companies.forEach(c=>searchIndex.push({type:"company",label:c[0],sub:n.name,id:n.id,lead:LEADERS.has(c[0])})));
+let sugItems=[], sugActive=-1;
+function hlt(label,term){
+  const i=label.toLowerCase().indexOf(term);
+  if(i<0||!term) return label;
+  return label.slice(0,i)+"<b>"+label.slice(i,i+term.length)+"</b>"+label.slice(i+term.length);
+}
+function renderSuggest(){
+  const term=q.value.trim().toLowerCase();
+  if(!term){hideSuggest();return;}
+  const starts=[], incl=[], rank=e=>e.type==="node"?0:1;
+  searchIndex.forEach(e=>{
+    const L=e.label.toLowerCase();
+    if(L.startsWith(term)) starts.push(e);
+    else if(L.includes(term)) incl.push(e);
+  });
+  starts.sort((a,b)=>rank(a)-rank(b)); incl.sort((a,b)=>rank(a)-rank(b));
+  sugItems=starts.concat(incl).slice(0,12); sugActive=-1;
+  if(!sugItems.length){
+    suggestBox.innerHTML=`<div class="sug-empty">未找到"${q.value.trim()}"相关环节或企业</div>`;
+    suggestBox.classList.add("show"); return;
+  }
+  suggestBox.innerHTML=sugItems.map((e,i)=>`
+    <div class="sug-item" data-i="${i}">
+      <span class="sug-type ${e.type}">${e.type==="node"?"环节":"企业"}</span>
+      <span class="sug-label">${hlt(e.label,term)}</span>
+      ${e.lead?'<span class="sug-lead" title="行业龙头">★</span>':''}
+      <span class="sug-sub">${e.sub}</span>
+    </div>`).join("");
+  suggestBox.classList.add("show");
+}
+function hideSuggest(){suggestBox.classList.remove("show");sugActive=-1;}
+function updateActive(){
+  [...suggestBox.children].forEach((el,i)=>el.classList.toggle("active",i===sugActive));
+  const el=suggestBox.children[sugActive]; if(el&&el.scrollIntoView)el.scrollIntoView({block:"nearest"});
+}
+function navigateTo(id){
+  hideSuggest();
+  const el=document.querySelector(`.node[data-id="${id}"]`);
+  if(el){el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1400);}
+  openDrawer(id);
+}
+suggestBox.addEventListener("click",e=>{
+  const it=e.target.closest(".sug-item"); if(!it)return;
+  navigateTo(sugItems[+it.dataset.i].id);
+});
+q.addEventListener("input",renderSuggest);
+q.addEventListener("keydown",e=>{
+  if(!suggestBox.classList.contains("show")||!sugItems.length){
+    if(e.key==="Enter"&&q.value.trim()){const m=searchIndex.find(x=>x.label.toLowerCase().includes(q.value.trim().toLowerCase()));if(m)navigateTo(m.id);}
+    return;
+  }
+  if(e.key==="ArrowDown"){e.preventDefault();sugActive=Math.min(sugActive+1,sugItems.length-1);updateActive();}
+  else if(e.key==="ArrowUp"){e.preventDefault();sugActive=Math.max(sugActive-1,0);updateActive();}
+  else if(e.key==="Enter"){e.preventDefault();navigateTo(sugItems[sugActive<0?0:sugActive].id);}
+  else if(e.key==="Escape"){hideSuggest();}
+});
+document.addEventListener("click",e=>{ if(!e.target.closest(".search")) hideSuggest(); });
+
 /* ====== 详情抽屉 ====== */
 const overlay=document.getElementById("overlay");
 const drawer=document.getElementById("drawer");
@@ -820,7 +923,7 @@ function openDrawer(id){
 
   document.getElementById("d-body").innerHTML=`
     <div class="sec"><h4>产业链定位</h4><p>${n.role}</p></div>
-    <div class="sec"><h4>代表企业 <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">（点击↗看股价）</span></h4><div class="company-grid">
+    <div class="sec"><h4>代表企业 <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">（<span style="color:#fbbf24">龙头</span>=行业龙头 · 点击↗看股价）</span></h4><div class="company-grid">
       ${n.companies.map(c=>companyChip(c,"company")).join("")}
     </div></div>
     ${relHTML(ups,"⬆ 上游供应（采购自）")}
