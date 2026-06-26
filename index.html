@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>算力网产业结构互动图 · 从下游到上游</title>
+<style>
+  :root{
+    --bg:#0a0e1a;
+    --panel:#121a2e;
+    --panel-2:#0f1626;
+    --line:#1e2a44;
+    --text:#e7edf7;
+    --muted:#8a98b5;
+    --accent:#4da3ff;
+    --L1:#3b82f6; /* 下游 应用与服务 */
+    --L2:#10b981; /* 中游 基础设施设备 */
+    --L3:#f59e0b; /* 上游 核心芯片元器件 */
+    --L4:#ef4444; /* 基石 半导体供应链 */
+    --dim:0.18;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 700px at 70% -10%, #15203a 0%, var(--bg) 55%);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  header{
+    padding:26px 28px 14px;
+    max-width:1500px;margin:0 auto;
+  }
+  h1{font-size:24px;margin:0 0 6px;letter-spacing:.5px}
+  .sub{color:var(--muted);font-size:13.5px;max-width:920px}
+  .sub b{color:var(--accent)}
+  .toolbar{
+    max-width:1500px;margin:14px auto 0;padding:0 28px;
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  }
+  .search{
+    position:relative;flex:1 1 280px;max-width:380px;
+  }
+  .search input{
+    width:100%;background:var(--panel);border:1px solid var(--line);
+    color:var(--text);border-radius:10px;padding:9px 12px 9px 34px;font-size:14px;outline:none;
+  }
+  .search input:focus{border-color:var(--accent)}
+  .search svg{position:absolute;left:10px;top:9px;opacity:.6}
+  .filters{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{
+    background:var(--panel);border:1px solid var(--line);color:var(--muted);
+    padding:7px 12px;border-radius:20px;font-size:12.5px;cursor:pointer;user-select:none;
+    transition:.15s;white-space:nowrap;
+  }
+  .chip:hover{color:var(--text);border-color:var(--accent)}
+  .chip.active{color:#fff;border-color:transparent}
+  .chip.active[data-f="bottleneck"]{background:#ef4444}
+  .chip.active[data-f="reset"]{background:#334155}
+  .chip.active[data-f="local"]{background:#10b981}
+  .hint{color:var(--muted);font-size:12px;margin-left:auto;align-self:center}
+
+  main{max-width:1500px;margin:8px auto 60px;padding:6px 28px 0;position:relative}
+  .stage{position:relative}
+  svg.links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible}
+  .layer{
+    position:relative;z-index:2;
+    border:1px solid var(--line);border-radius:16px;
+    background:linear-gradient(180deg, rgba(255,255,255,.018), rgba(255,255,255,0));
+    margin:16px 0;padding:14px 16px 18px;
+  }
+  .layer-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .layer-tag{
+    font-size:12px;font-weight:700;color:#0a0e1a;padding:4px 10px;border-radius:8px;letter-spacing:.5px;
+  }
+  .layer-title{font-size:16px;font-weight:600}
+  .layer-desc{font-size:12.5px;color:var(--muted);margin-left:4px}
+  .arrow-band{
+    text-align:center;color:var(--muted);font-size:12px;letter-spacing:3px;margin:-2px 0 2px;
+  }
+  .nodes{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+  .node{
+    position:relative;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:12px 13px;cursor:pointer;transition:.18s;overflow:hidden;
+  }
+  .node::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c)}
+  .node:hover{transform:translateY(-2px);border-color:var(--c);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .node.dim{opacity:var(--dim);filter:saturate(.4)}
+  .node.hit{border-color:var(--c);box-shadow:0 0 0 2px var(--c) inset}
+  .node.active{border-color:var(--c);box-shadow:0 0 0 2px var(--c), 0 10px 30px rgba(0,0,0,.4)}
+  .node-name{font-size:14.5px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+  .node-name .bn{font-size:10px;background:#ef4444;color:#fff;padding:1px 6px;border-radius:6px;font-weight:700}
+  .node-name .lc{font-size:10px;background:#10b981;color:#04211a;padding:1px 6px;border-radius:6px;font-weight:700}
+  .node-mini{font-size:11.5px;color:var(--muted);line-height:1.45;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .tags{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px}
+  .tag{font-size:10.5px;background:var(--panel-2);border:1px solid var(--line);
+    color:var(--muted);padding:2px 7px;border-radius:6px}
+
+  /* detail drawer */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+  .overlay.show{opacity:1;pointer-events:auto}
+  .drawer{
+    position:fixed;top:0;right:0;height:100%;width:430px;max-width:92vw;background:var(--panel-2);
+    border-left:1px solid var(--line);transform:translateX(100%);transition:.28s cubic-bezier(.2,.7,.2,1);
+    z-index:50;display:flex;flex-direction:column;
+  }
+  .drawer.show{transform:translateX(0)}
+  .drawer-head{padding:20px 22px 16px;border-bottom:1px solid var(--line);position:relative}
+  .drawer-layer{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:7px;color:#0a0e1a;display:inline-block;margin-bottom:9px}
+  .drawer-title{font-size:20px;font-weight:700;margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .close{position:absolute;top:16px;right:16px;background:var(--panel);border:1px solid var(--line);
+    color:var(--muted);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:16px;line-height:1}
+  .close:hover{color:#fff}
+  .drawer-body{padding:18px 22px 30px;overflow-y:auto}
+  .sec{margin-bottom:20px}
+  .sec h4{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin:0 0 8px}
+  .sec p{margin:0;font-size:13.5px;color:#d4dceb}
+  .company-grid{display:flex;flex-wrap:wrap;gap:7px}
+  .company{font-size:12.5px;background:var(--panel);border:1px solid var(--line);padding:5px 11px;border-radius:8px}
+  .company .reg{font-size:10px;color:var(--muted);margin-left:5px}
+  .rel{display:flex;flex-direction:column;gap:6px}
+  .rel a{display:flex;align-items:center;gap:8px;font-size:13px;color:#d4dceb;cursor:pointer;
+    padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel);transition:.15s}
+  .rel a:hover{border-color:var(--accent);color:#fff}
+  .rel .dot{width:8px;height:8px;border-radius:50%}
+  .kv{display:flex;gap:10px;flex-wrap:wrap}
+  .kv .item{flex:1 1 120px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .kv .item .k{font-size:11px;color:var(--muted)}
+  .kv .item .v{font-size:14px;font-weight:600;margin-top:3px}
+  footer{max-width:1500px;margin:0 auto;padding:0 28px 40px;color:var(--muted);font-size:11.5px;line-height:1.7}
+  footer a{color:var(--accent);text-decoration:none}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px}
+  .legend span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+  .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+  @media(max-width:640px){
+    .drawer{width:100%}
+    header{padding:18px}
+    .toolbar,main,footer{padding-left:16px;padding-right:16px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>算力网产业结构互动图</h1>
+  <div class="sub">
+    围绕国家"<b>东数西算</b>"工程与新一轮万亿级算力网投资，按 <b>下游 → 上游</b> 的顺序拆解算力网产业链：
+    从<b>数据中心与算力服务</b>，到<b>基础设施与设备</b>，再到<b>核心芯片与元器件</b>，最终落到<b>半导体供应链基石</b>。
+    点击任一环节查看详情；悬停可高亮其上下游关联；红标为<b style="color:#ff6b6b">卡脖子</b>环节。
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--L1)"></i>下游 · 应用与算力服务</span>
+    <span><i style="background:var(--L2)"></i>中游 · 基础设施与设备</span>
+    <span><i style="background:var(--L3)"></i>上游 · 核心芯片与元器件</span>
+    <span><i style="background:var(--L4)"></i>基石 · 半导体供应链</span>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a98b5" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+    <input id="q" type="text" placeholder="搜索环节或企业，如 昇腾 / HBM / 光模块 / 中芯国际">
+  </div>
+  <div class="filters">
+    <div class="chip" data-f="bottleneck">⚠ 只看卡脖子环节</div>
+    <div class="chip" data-f="local">国产化突破环节</div>
+    <div class="chip" data-f="reset">重置</div>
+  </div>
+  <div class="hint">提示：悬停看上下游 · 点击看详情</div>
+</div>
+
+<main>
+  <div class="stage">
+    <svg class="links" id="links"></svg>
+    <div id="layers"></div>
+  </div>
+</main>
+
+<footer>
+  数据为产业结构示意，代表企业列举不构成投资建议；标注的"国产化/卡脖子"为公开行业共识的概括。<br>
+  企业标签后括号：A=A股，HK=港股，US=美股，PRI=非上市/政府平台，FOR=海外厂商。
+</footer>
+
+<!-- 详情抽屉 -->
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <button class="close" id="close">✕</button>
+    <span class="drawer-layer" id="d-layer"></span>
+    <h2 class="drawer-title" id="d-title"></h2>
+  </div>
+  <div class="drawer-body" id="d-body"></div>
+</aside>
+
+<script>
+/* ============== 产业链数据模型 ==============
+   layer: 1 下游 / 2 中游 / 3 上游 / 4 基石
+   up: 该环节的上游(更靠近芯片/材料)节点 id —— 用于连线与高亮
+   bottleneck: 卡脖子；local: 国产化已有显著突破
+*/
+const LAYERS = [
+  {id:1,tag:"下游",title:"应用与算力服务层",color:"--L1",
+   desc:"算力的需求端与变现端：把算力转化为模型、云服务与行业应用"},
+  {id:2,tag:"中游",title:"基础设施与设备层",color:"--L2",
+   desc:"承载算力的物理底座：服务器、网络、存储、供电与散热"},
+  {id:3,tag:"上游",title:"核心芯片与元器件层",color:"--L3",
+   desc:"决定算力性能与成本的核心器件，AI 芯片与高带宽存储是焦点"},
+  {id:4,tag:"基石",title:"半导体供应链层",color:"--L4",
+   desc:"制造芯片所需的代工、封装、设备、材料与工具，国产替代主战场"},
+];
+
+const NODES = [
+  /* ---------- L1 下游 ---------- */
+  {id:"app", layer:1, name:"AI大模型与行业应用",
+   mini:"大模型训练/推理、智能驾驶、AIGC、行业智能化，是算力的最终需求来源。",
+   role:"算力网的需求引擎。大模型参数与多模态应用爆发，直接拉动训练与推理算力，是整个产业链向上游传导的起点。",
+   companies:[["阿里·通义","A/US"],["字节·豆包","PRI"],["DeepSeek","PRI"],["百度·文心","US"],["腾讯·混元","HK"],["科大讯飞","A"]],
+   up:["cloud","scheduler"]},
+  {id:"cloud", layer:1, name:"云计算 / 算力服务",
+   mini:"以公有云、智算云形式对外出租 GPU 算力与 MaaS 模型服务。",
+   role:"算力的商业化出口。运营商与云厂商把数据中心算力打包成弹性云服务、模型即服务(MaaS)对外销售。",
+   companies:[["阿里云","US"],["华为云","PRI"],["腾讯云","HK"],["中国移动","A/HK"],["天翼云(电信)","A/HK"],["UCloud优刻得","A"]],
+   up:["idc","server"]},
+  {id:"scheduler", layer:1, name:"算力调度与算力网络平台",
+   mini:'"东数西算"骨干：跨区域算力并网、调度、交易与算力路由。',
+   role:"算力网的“神经中枢”。通过算力并网、统一调度与算力交易平台，把东西部分散的数据中心连成一张网，实现算力像电力一样流通。",
+   companies:[["国家算力互联网","PRI"],["中国电信","A/HK"],["中国移动","A/HK"],["中国联通","A/HK"],["运营商算力交易所","PRI"]],
+   up:["idc","network"]},
+  {id:"idc", layer:1, name:"数据中心 / IDC / 智算中心",
+   mini:"算力的物理载体，含通用 IDC 与面向 AI 的智算中心集群。",
+   role:"算力网的“地基”。万亿投资的主要落点，集中在京津冀、长三角、粤港澳及西部枢纽节点的大型智算中心建设。",
+   companies:[["万国数据","US/HK"],["世纪互联","US"],["润泽科技","A"],["光环新网","A"],["宝信软件","A"],["数据港","A"]],
+   up:["server","network","storage","cooling","power","construct"]},
+
+  /* ---------- L2 中游 ---------- */
+  {id:"server", layer:2, name:"AI服务器 / 整机",
+   mini:"GPU/AI 服务器整机，是芯片、内存、网络的集成载体。", bottleneck:true,
+   role:"把 AI 芯片、HBM、高速网卡集成为可用算力单元。整机集成能力强，但核心算力仍受 GPU 供给制约。",
+   companies:[["浪潮信息","A"],["新华三/紫光","A"],["中科曙光","A"],["工业富联","A"],["联想","HK"],["超聚变","PRI"]],
+   up:["gpu","cpu","memory","optical_chip"]},
+  {id:"network", layer:2, name:"网络设备 / 交换机",
+   mini:"高速以太网/InfiniBand 交换机，决定 GPU 集群的互联效率。",
+   role:"大模型训练需要数千张 GPU 高速互联，无损网络与高端交换机是集群算力发挥的关键。",
+   companies:[["中兴通讯","A/HK"],["新华三","A"],["锐捷网络","A"],["盛科通信","A"],["华为","PRI"]],
+   up:["optical","switch_chip","pcb"]},
+  {id:"optical", layer:2, name:"光模块 / 光通信",
+   mini:"800G/1.6T 光模块，AI 集群东西向流量爆发的核心受益环节。", local:true,
+   role:"中国光模块全球份额领先。AI 数据中心内部互联拉动 800G→1.6T 升级，是算力网中游高景气环节。",
+   companies:[["中际旭创","A"],["新易盛","A"],["天孚通信","A"],["光迅科技","A"],["华工科技","A"]],
+   up:["optical_chip","pcb"]},
+  {id:"storage", layer:2, name:"数据存储设备 / 系统",
+   mini:"全闪存阵列、分布式存储，承载训练数据与模型权重。",
+   role:"海量训练数据与 checkpoint 需要高吞吐存储系统，国产全闪存与分布式存储加速替代。",
+   companies:[["华为存储","PRI"],["浪潮信息","A"],["曙光存储","A"],["紫晶/同有科技","A"]],
+   up:["memory","nand"]},
+  {id:"cooling", layer:2, name:"散热 / 液冷",
+   mini:"风冷/冷板/浸没液冷，高功率 GPU 机柜的刚需。", local:true,
+   role:"单机柜功率密度飙升使液冷从可选变刚需，是智算中心建设确定性最强的环节之一。",
+   companies:[["英维克","A"],["高澜股份","A"],["申菱环境","A"],["曙光数创","A"],["科华数据","A"]],
+   up:["material_basic"]},
+  {id:"power", layer:2, name:"供配电 / 电源 / UPS",
+   mini:"数据中心高压直流、UPS、柴油发电与配电系统。",
+   role:"算力即电力。智算中心耗电巨大，供配电与不间断电源是稳定运行底座，也牵动绿电与储能。",
+   companies:[["科华数据","A"],["科士达","A"],["中恒电气","A"],["维谛技术","A"]],
+   up:["power_chip","material_basic"]},
+  {id:"construct", layer:2, name:"数据中心建设 / 机电",
+   mini:"机房土建、机电安装、温控集成与总包交付。",
+   role:"万亿投资的直接施工承接方，西部枢纽节点大规模建设带动机电总包与温控集成需求。",
+   companies:[["宝信软件","A"],["数据港","A"],["佳力图","A"],["依米康","A"]],
+   up:["cooling","power"]},
+
+  /* ---------- L3 上游 ---------- */
+  {id:"gpu", layer:3, name:"AI芯片 / GPU / NPU",
+   mini:"训练与推理的算力核心，国产替代最关键也最受限。", bottleneck:true,
+   role:"算力网“心脏”。决定单卡算力上限。海外高端 GPU 受出口管制，国产昇腾/寒武纪等加速追赶但先进制程仍受限。",
+   companies:[["华为昇腾","PRI"],["寒武纪","A"],["海光信息","A"],["英伟达","FOR"],["AMD","FOR"],["壁仞/摩尔线程","PRI"]],
+   up:["eda","ip","foundry","packaging","memory"]},
+  {id:"cpu", layer:3, name:"CPU / 通用处理器",
+   mini:"服务器主控处理器，国产 x86/ARM/自主指令集并行发展。", bottleneck:true,
+   role:"服务器的通用算力与调度核心。海光(x86授权)、飞腾(ARM)、龙芯(自主)多路线推进国产化。",
+   companies:[["海光信息","A"],["飞腾","PRI"],["龙芯中科","A"],["Intel","FOR"],["AMD","FOR"]],
+   up:["eda","ip","foundry","packaging"]},
+  {id:"memory", layer:3, name:"存储芯片 / HBM",
+   mini:"HBM 高带宽内存是 AI 芯片性能瓶颈，国产化差距最大。", bottleneck:true,
+   role:"AI 芯片性能的“另一半”。HBM 由海外三巨头垄断且受管制，是国产算力当前最大短板之一；DRAM/NAND 国产已起步。",
+   companies:[["长鑫存储(DRAM)","PRI"],["长江存储(NAND)","PRI"],["SK海力士","FOR"],["三星","FOR"],["美光","FOR"]],
+   up:["foundry","packaging","equipment","material_chip"]},
+  {id:"nand", layer:3, name:"NAND 闪存 / 颗粒",
+   mini:"固态存储核心颗粒，国产长江存储已进入第一梯队。", local:true,
+   role:"企业级 SSD 的核心。长江存储 3D NAND 技术追平国际先进，是国产存储链突破样板。",
+   companies:[["长江存储","PRI"],["三星","FOR"],["铠侠","FOR"]],
+   up:["foundry","equipment","material_chip"]},
+  {id:"optical_chip", layer:3, name:"光芯片 / 光器件",
+   mini:"光模块上游的激光器/探测器芯片，高端仍依赖进口。", bottleneck:true,
+   role:"光模块的“芯”。高速率 EML/硅光芯片国产化率低，是光通信链向上的关键攻坚点。",
+   companies:[["源杰科技","A"],["仕佳光子","A"],["长光华芯","A"],["Lumentum","FOR"]],
+   up:["foundry","material_chip"]},
+  {id:"switch_chip", layer:3, name:"交换芯片",
+   mini:"高端以太网交换芯片，国产盛科等突破中。", bottleneck:true,
+   role:"决定交换机端口速率与容量的核心，高端市场长期由博通主导，国产正爬坡。",
+   companies:[["盛科通信","A"],["博通","FOR"],["美满/Marvell","FOR"]],
+   up:["eda","foundry","packaging"]},
+  {id:"power_chip", layer:3, name:"功率 / 模拟芯片",
+   mini:"电源管理、功率器件，支撑供配电与服务器电源。",
+   role:"服务器与供配电的电能转换核心，国产模拟与功率半导体加速上车。",
+   companies:[["斯达半导","A"],["士兰微","A"],["纳芯微","A"]],
+   up:["foundry","material_chip"]},
+  {id:"pcb", layer:3, name:"PCB / 高速覆铜板",
+   mini:"高多层/高速 PCB，AI 服务器与交换机的电路底板。", local:true,
+   role:"高速 PCB 与高频覆铜板量价齐升，是 AI 硬件中确定性受益、国产较强的环节。",
+   companies:[["沪电股份","A"],["生益科技","A"],["胜宏科技","A"],["深南电路","A"]],
+   up:["material_basic"]},
+
+  /* ---------- L4 基石 ---------- */
+  {id:"foundry", layer:4, name:"晶圆代工",
+   mini:"芯片制造的核心，先进制程受设备管制制约。", bottleneck:true,
+   role:"把芯片设计变成实物的制造环节。先进制程(7nm 及以下)因光刻设备受限成为最大瓶颈，中芯国际承担国产攻坚。",
+   companies:[["台积电","US/FOR"],["中芯国际","A/HK"],["华虹","A/HK"],["三星代工","FOR"]],
+   up:["equipment","material_chip","eda"]},
+  {id:"packaging", layer:4, name:"先进封装 / 封测",
+   mini:"CoWoS 等先进封装是 AI 芯片+HBM 集成的关键。", bottleneck:true,
+   role:"把 GPU 与 HBM 高密度集成的“最后一公里”。CoWoS 产能紧张，国产封测加速布局 2.5D/3D 先进封装。",
+   companies:[["长电科技","A"],["通富微电","A"],["华天科技","A"],["日月光","FOR"]],
+   up:["equipment","material_chip"]},
+  {id:"equipment", layer:4, name:"半导体设备 (光刻机等)",
+   mini:"光刻/刻蚀/沉积/量测设备，光刻机是最硬的卡点。", bottleneck:true,
+   role:"制造芯片的“母机”。EUV/高端 DUV 光刻机被 ASML 垄断且对华禁运，刻蚀/沉积等环节国产已实现突破。",
+   companies:[["ASML","FOR"],["北方华创","A"],["中微公司","A"],["上海微电子","PRI"],["拓荆科技","A"]],
+   up:["material_basic"]},
+  {id:"material_chip", layer:4, name:"半导体材料",
+   mini:"硅片、光刻胶、电子特气、CMP 等晶圆制造材料。", bottleneck:true,
+   role:"晶圆制造的“耗材”。高端光刻胶、大硅片仍依赖进口，国产电子特气、CMP 抛光等已逐步替代。",
+   companies:[["沪硅产业","A"],["彤程新材","A"],["华特气体","A"],["安集科技","A"]],
+   up:["material_basic"]},
+  {id:"eda", layer:4, name:"EDA 设计工具",
+   mini:"芯片设计软件，三大海外厂商主导，国产追赶中。", bottleneck:true,
+   role:"芯片设计的“画笔”。Synopsys/Cadence/西门子三足鼎立，国产华大九天等在部分点工具实现可用替代。",
+   companies:[["Synopsys","FOR"],["Cadence","FOR"],["华大九天","A"],["概伦电子","A"]],
+   up:[]},
+  {id:"ip", layer:4, name:"IP 核 / 指令集",
+   mini:"ARM/RISC-V/x86 等处理器架构授权。", bottleneck:true,
+   role:"芯片的“基因图纸”。ARM 授权、x86 受限推动国产转向 RISC-V 与自主指令集生态建设。",
+   companies:[["ARM","FOR"],["RISC-V生态","PRI"],["芯原股份","A"]],
+   up:[]},
+  {id:"material_basic", layer:4, name:"基础材料 / 金属",
+   mini:"铜、铝、稀土、特种工程塑料等上游原材料。",
+   role:"产业链最底层的大宗与特种材料，支撑 PCB、散热、设备与材料制造。",
+   companies:[["多家有色/化工","A"]],
+   up:[]},
+];
+
+/* ============== 渲染 ============== */
+const nodeById = Object.fromEntries(NODES.map(n=>[n.id,n]));
+const layerColor = {1:"var(--L1)",2:"var(--L2)",3:"var(--L3)",4:"var(--L4)"};
+const layerColorHex = {1:"#3b82f6",2:"#10b981",3:"#f59e0b",4:"#ef4444"};
+const regName = {A:"A股","A/HK":"A+H","A/US":"A/美","US":"美股","US/HK":"美/港","US/FOR":"美/外","HK":"港股","PRI":"未上市","FOR":"海外"};
+
+// 反向索引：down[x] = 哪些节点把 x 当作上游
+const downMap = {};
+NODES.forEach(n=>(n.up||[]).forEach(u=>{(downMap[u]=downMap[u]||[]).push(n.id)}));
+
+const layersEl = document.getElementById("layers");
+LAYERS.forEach(L=>{
+  const sec = document.createElement("section");
+  sec.className="layer";
+  sec.style.borderColor = "color-mix(in srgb,"+layerColor[L.id]+" 35%, var(--line))";
+  sec.innerHTML = `
+    <div class="layer-head">
+      <span class="layer-tag" style="background:${layerColor[L.id]}">${L.tag}</span>
+      <span class="layer-title">${L.title}</span>
+      <span class="layer-desc">${L.desc}</span>
+    </div>
+    <div class="nodes" id="layer-${L.id}"></div>`;
+  layersEl.appendChild(sec);
+  if(L.id<4){
+    const band=document.createElement("div");
+    band.className="arrow-band";
+    band.textContent="▲ 向上游采购 ／ 向下游供货 ▼";
+    layersEl.appendChild(band);
+  }
+});
+
+NODES.forEach(n=>{
+  const host=document.getElementById("layer-"+n.layer);
+  const el=document.createElement("div");
+  el.className="node";el.dataset.id=n.id;
+  el.style.setProperty("--c",layerColor[n.layer]);
+  const badges=(n.bottleneck?'<span class="bn">卡脖子</span>':'')+(n.local?'<span class="lc">国产突破</span>':'');
+  el.innerHTML=`
+    <div class="node-name">${n.name}${badges}</div>
+    <div class="node-mini">${n.mini}</div>
+    <div class="tags">${n.companies.slice(0,3).map(c=>`<span class="tag">${c[0]}</span>`).join("")}</div>`;
+  host.appendChild(el);
+  el.addEventListener("mouseenter",()=>highlight(n.id));
+  el.addEventListener("mouseleave",()=>{ if(!filterActive) clearHL(); else applyFilter(); });
+  el.addEventListener("click",()=>openDrawer(n.id));
+});
+
+/* ====== 连线 ====== */
+const svg=document.getElementById("links");
+function buildLinks(){
+  svg.innerHTML="";
+  const stage=document.querySelector(".stage").getBoundingClientRect();
+  NODES.forEach(n=>(n.up||[]).forEach(u=>{
+    const a=document.querySelector(`.node[data-id="${n.id}"]`);
+    const b=document.querySelector(`.node[data-id="${u}"]`);
+    if(!a||!b)return;
+    const ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
+    const x1=ra.left+ra.width/2-stage.left, y1=ra.top-stage.top;
+    const x2=rb.left+rb.width/2-stage.left, y2=rb.bottom-stage.top;
+    const my=(y1+y2)/2;
+    const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d",`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`);
+    path.setAttribute("fill","none");
+    path.setAttribute("stroke",layerColorHex[nodeById[u].layer]);
+    path.setAttribute("stroke-width","1.4");
+    path.setAttribute("opacity","0.12");
+    path.dataset.from=n.id;path.dataset.to=u;
+    svg.appendChild(path);
+  }));
+}
+window.addEventListener("load",buildLinks);
+window.addEventListener("resize",()=>{clearTimeout(window._rt);window._rt=setTimeout(buildLinks,150)});
+
+/* ====== 高亮上下游 ====== */
+function relatedSet(id){
+  const set=new Set([id]);
+  (nodeById[id].up||[]).forEach(u=>set.add(u));      // 直接上游
+  (downMap[id]||[]).forEach(d=>set.add(d));          // 直接下游
+  return set;
+}
+function highlight(id){
+  const set=relatedSet(id);
+  document.querySelectorAll(".node").forEach(el=>{
+    el.classList.toggle("dim",!set.has(el.dataset.id));
+    el.classList.toggle("active",el.dataset.id===id);
+    el.classList.remove("hit");
+  });
+  svg.querySelectorAll("path").forEach(p=>{
+    const on=p.dataset.from===id||p.dataset.to===id;
+    p.setAttribute("opacity",on?"0.9":"0.04");
+    p.setAttribute("stroke-width",on?"2.4":"1");
+  });
+}
+function clearHL(){
+  document.querySelectorAll(".node").forEach(el=>el.classList.remove("dim","active","hit"));
+  svg.querySelectorAll("path").forEach(p=>{p.setAttribute("opacity","0.12");p.setAttribute("stroke-width","1.4")});
+}
+
+/* ====== 搜索 + 筛选 ====== */
+let filterActive=false;
+const q=document.getElementById("q");
+function applyFilter(){
+  const term=q.value.trim().toLowerCase();
+  const onlyBN=document.querySelector('.chip[data-f="bottleneck"]').classList.contains("active");
+  const onlyLocal=document.querySelector('.chip[data-f="local"]').classList.contains("active");
+  filterActive = !!term || onlyBN || onlyLocal;
+  if(!filterActive){clearHL();return;}
+  document.querySelectorAll(".node").forEach(el=>{
+    const n=nodeById[el.dataset.id];
+    let ok=true;
+    if(onlyBN) ok=ok&&!!n.bottleneck;
+    if(onlyLocal) ok=ok&&!!n.local;
+    if(term){
+      const hay=(n.name+n.mini+n.role+n.companies.map(c=>c[0]).join("")).toLowerCase();
+      ok=ok&&hay.includes(term);
+    }
+    el.classList.toggle("dim",!ok);
+    el.classList.toggle("hit",ok&&(!!term||onlyBN||onlyLocal));
+    el.classList.remove("active");
+  });
+  svg.querySelectorAll("path").forEach(p=>p.setAttribute("opacity","0.05"));
+}
+q.addEventListener("input",applyFilter);
+document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
+  const f=c.dataset.f;
+  if(f==="reset"){
+    q.value="";
+    document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
+    filterActive=false;clearHL();return;
+  }
+  c.classList.toggle("active");
+  applyFilter();
+}));
+
+/* ====== 详情抽屉 ====== */
+const overlay=document.getElementById("overlay");
+const drawer=document.getElementById("drawer");
+function openDrawer(id){
+  const n=nodeById[id];
+  const Lc=layerColor[n.layer], L=LAYERS.find(l=>l.id===n.layer);
+  document.getElementById("d-layer").textContent=`${L.tag} · ${L.title}`;
+  document.getElementById("d-layer").style.background=Lc;
+  const badges=(n.bottleneck?'<span class="bn" style="font-size:11px;background:#ef4444;color:#fff;padding:2px 8px;border-radius:7px">卡脖子</span>':'')+
+               (n.local?'<span class="lc" style="font-size:11px;background:#10b981;color:#04211a;padding:2px 8px;border-radius:7px">国产突破</span>':'');
+  document.getElementById("d-title").innerHTML=n.name+" "+badges;
+
+  const ups=(n.up||[]).map(u=>nodeById[u]);
+  const downs=(downMap[id]||[]).map(d=>nodeById[d]);
+  const relHTML=(arr,label)=> arr.length? `
+    <div class="sec"><h4>${label}</h4><div class="rel">
+    ${arr.map(r=>`<a onclick="openDrawer('${r.id}')"><span class="dot" style="background:${layerColor[r.layer]}"></span>${r.name}</a>`).join("")}
+    </div></div>`:"";
+
+  document.getElementById("d-body").innerHTML=`
+    <div class="sec"><h4>产业链定位</h4><p>${n.role}</p></div>
+    <div class="sec"><h4>代表企业</h4><div class="company-grid">
+      ${n.companies.map(c=>`<span class="company">${c[0]}<span class="reg">${regName[c[1]]||c[1]}</span></span>`).join("")}
+    </div></div>
+    ${relHTML(ups,"⬆ 上游供应（采购自）")}
+    ${relHTML(downs,"⬇ 下游需求（供货给）")}
+  `;
+  overlay.classList.add("show");drawer.classList.add("show");
+}
+function closeDrawer(){overlay.classList.remove("show");drawer.classList.remove("show")}
+document.getElementById("close").addEventListener("click",closeDrawer);
+overlay.addEventListener("click",closeDrawer);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer()});
+window.openDrawer=openDrawer;
+</script>
+</body>
+</html>
