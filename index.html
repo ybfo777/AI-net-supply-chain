@@ -102,6 +102,14 @@
   .tags{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px}
   .tag{font-size:10.5px;background:var(--panel-2);border:1px solid var(--line);
     color:var(--muted);padding:2px 7px;border-radius:6px}
+  a.tag.slink{color:#cfe0ff;border-color:#2a3d63;text-decoration:none;cursor:pointer}
+  a.tag.slink:hover{border-color:var(--accent);color:#fff;background:#16233c}
+  .tag.unlisted{opacity:.65}
+  .slink .ext{opacity:.5;font-size:9px;margin-left:2px}
+  .stocksel{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+  .stocksel select{background:var(--panel);border:1px solid var(--line);color:var(--text);
+    border-radius:8px;padding:6px 9px;font-size:12.5px;outline:none;cursor:pointer}
+  .stocksel select:focus{border-color:var(--accent)}
 
   /* detail drawer */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.2s;z-index:40}
@@ -125,6 +133,9 @@
   .company-grid{display:flex;flex-wrap:wrap;gap:7px}
   .company{font-size:12.5px;background:var(--panel);border:1px solid var(--line);padding:5px 11px;border-radius:8px}
   .company .reg{font-size:10px;color:var(--muted);margin-left:5px}
+  a.company.slink{text-decoration:none;color:#d4dceb;cursor:pointer}
+  a.company.slink:hover{border-color:var(--accent);color:#fff}
+  .company.unlisted{opacity:.7}
   .rel{display:flex;flex-direction:column;gap:6px}
   .rel a{display:flex;align-items:center;gap:8px;font-size:13px;color:#d4dceb;cursor:pointer;
     padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel);transition:.15s}
@@ -241,7 +252,14 @@
     <div class="chip" data-f="advantage">★ 中国主导/反制</div>
     <div class="chip" data-f="reset">重置</div>
   </div>
-  <div class="hint">提示：悬停看上下游 · 点击看详情</div>
+  <div class="stocksel">
+    <span>股价数据源</span>
+    <select id="provider">
+      <option value="yahoo">Yahoo Finance</option>
+      <option value="xueqiu">雪球（中文）</option>
+    </select>
+  </div>
+  <div class="hint">提示：悬停看上下游 · 点击环节看详情 · 点击企业标签↗看股价</div>
 </div>
 
 <main>
@@ -254,7 +272,8 @@
 <footer>
   数据为产业结构示意，代表企业列举不构成投资建议；标注的"卡脖子 / 国产突破 / 中国主导"为公开行业共识的概括。<br>
   企业标签后括号：A=A股，HK=港股，US=美股，PRI=非上市/政府平台，FOR=海外厂商。<br>
-  政策文号与金额已于 2026-06 联网核实，来源为中国政府网、国家发改委、工信部等官方发布；点击"政策依据"展开查看原文链接。
+  政策文号与金额已于 2026-06 联网核实，来源为中国政府网、国家发改委、工信部等官方发布；点击"政策依据"展开查看原文链接。<br>
+  点击带 ↗ 的企业标签可跳转外部股价页面（数据源可切换 Yahoo Finance / 雪球）；股票代码为人工整理，仅供参考，请以交易所行情为准。
 </footer>
 
 <!-- 详情抽屉 -->
@@ -463,7 +482,7 @@ const NODES = [
   {id:"material_basic", layer:4, name:"基础材料 / 金属",
    mini:"铜、铝、特种工程塑料等上游大宗原材料。",
    role:"支撑 PCB、散热、结构件的大宗与特种材料，进一步追溯到底层金属与化工原料。",
-   companies:[["多家有色/化工","A"]],
+   companies:[["多家有色/化工","PRI"]],
    up:["high_purity_metal"]},
 
   /* ---------- L5 深层：设备核心零部件与高端材料 ---------- */
@@ -577,6 +596,69 @@ const layerColor = {1:"var(--L1)",2:"var(--L2)",3:"var(--L3)",4:"var(--L4)",5:"v
 const layerColorHex = {1:"#3b82f6",2:"#10b981",3:"#f59e0b",4:"#ef4444",5:"#a855f7",6:"#ec4899"};
 const regName = {A:"A股","A/HK":"A+H","A/US":"A/美","US":"美股","US/HK":"美/港","US/FOR":"美/外","HK":"港股","PRI":"未上市","FOR":"海外"};
 
+/* ===== 上市公司 → 股票代码（Yahoo Finance 格式：.SS沪 .SZ深 .HK港 .T东京 .KS首尔 .DE德 / 美股纯字母）===== */
+const TICKERS = {
+  "阿里·通义":"BABA","百度·文心":"BIDU","腾讯·混元":"0700.HK","科大讯飞":"002230.SZ",
+  "阿里云":"BABA","腾讯云":"0700.HK","中国移动":"0941.HK","天翼云(电信)":"0728.HK","UCloud优刻得":"688158.SS",
+  "中国电信":"0728.HK","中国联通":"0762.HK",
+  "万国数据":"GDS","世纪互联":"VNET","润泽科技":"300442.SZ","光环新网":"300383.SZ","宝信软件":"600845.SS","数据港":"603881.SS",
+  "浪潮信息":"000977.SZ","新华三/紫光":"000938.SZ","新华三":"000938.SZ","中科曙光":"603019.SS","工业富联":"601138.SS","联想":"0992.HK",
+  "中兴通讯":"0763.HK","锐捷网络":"301165.SZ","盛科通信":"688702.SS",
+  "中际旭创":"300308.SZ","新易盛":"300502.SZ","天孚通信":"300394.SZ","光迅科技":"002281.SZ","华工科技":"000988.SZ",
+  "紫晶/同有科技":"300302.SZ","英维克":"002837.SZ","高澜股份":"300499.SZ","申菱环境":"301018.SZ","科华数据":"002335.SZ",
+  "科士达":"002518.SZ","中恒电气":"002364.SZ","佳力图":"603912.SS","依米康":"300249.SZ",
+  "寒武纪":"688256.SS","海光信息":"688041.SS","英伟达":"NVDA","AMD":"AMD","龙芯中科":"688047.SS","Intel":"INTC",
+  "SK海力士":"000660.KS","三星":"005930.KS","三星代工":"005930.KS","美光":"MU",
+  "源杰科技":"688498.SS","仕佳光子":"688313.SS","长光华芯":"688048.SS","Lumentum":"LITE",
+  "博通":"AVGO","美满/Marvell":"MRVL","斯达半导":"603290.SS","士兰微":"600460.SS","纳芯微":"688052.SS",
+  "沪电股份":"002463.SZ","生益科技":"600183.SS","胜宏科技":"300476.SZ","深南电路":"002916.SZ",
+  "台积电":"TSM","中芯国际":"0981.HK","华虹":"1347.HK","长电科技":"600584.SS","通富微电":"002156.SZ","华天科技":"002185.SZ","日月光":"ASX",
+  "ASML":"ASML","ASML自研":"ASML","Cymer(ASML)":"ASML","北方华创":"002371.SZ","北方华创(七星)":"002371.SZ","中微公司":"688012.SS","拓荆科技":"688072.SS",
+  "沪硅产业":"688126.SS","彤程新材":"603650.SS","华特气体":"688268.SS","安集科技":"688019.SS",
+  "Synopsys":"SNPS","Cadence":"CDNS","华大九天":"301269.SZ","概伦电子":"688206.SS","ARM":"ARM","芯原股份":"688521.SS",
+  "福光股份":"688010.SS","AE(Advanced Energy)":"AEIS","MKS":"MKSI","英杰电气":"300820.SZ","京瓷":"6971.T","国瓷材料":"300285.SZ",
+  "信越化学":"4063.T","信越":"4063.T","SUMCO":"3436.T","TCL中环":"002129.SZ",
+  "东京应化 TOK":"4186.T","南大光电":"300346.SZ","Photronics":"PLAB","凸版 Toppan":"7911.T","路维光电":"688401.SS","清溢光电":"688138.SS",
+  "金宏气体":"688106.SS","林德/液空":"LIN","鼎龙股份":"300054.SZ","卡博特/陶氏":"CBT","江丰电子":"300666.SZ","有研新材":"600206.SS","霍尼韦尔":"HON",
+  "瓦克 Wacker":"WCH.DE","中船特气":"688146.SS","凯美特气":"002549.SZ",
+  "北方稀土":"600111.SS","中国稀土":"000831.SZ","盛和资源":"600392.SS",
+  "云南锗业":"002428.SZ","驰宏锌锗":"600497.SS","中金岭南":"000060.SZ",
+  "方大炭素":"600516.SS","金石资源":"603505.SS","巨化股份":"600160.SS","东方钽业":"000962.SZ","云南铜业":"000878.SZ"
+};
+
+let provider = localStorage.getItem("stockProvider") || "yahoo";
+function yahooToXueqiu(t){
+  if(/\.SS$/.test(t)) return "SH"+t.replace(".SS","");
+  if(/\.SZ$/.test(t)) return "SZ"+t.replace(".SZ","");
+  if(/\.HK$/.test(t)) return "HK"+t.replace(".HK","").padStart(5,"0");
+  if(!t.includes(".")) return t;            // 美股纯字母
+  return null;                               // 日/韩/德等雪球不覆盖 → 按名称搜索
+}
+function stockURL(name){
+  const t=TICKERS[name];
+  if(provider==="xueqiu"){
+    const xs=t?yahooToXueqiu(t):null;
+    return xs ? `https://xueqiu.com/S/${xs}` : `https://xueqiu.com/k?q=${encodeURIComponent(name)}`;
+  }
+  return t ? `https://finance.yahoo.com/quote/${encodeURIComponent(t)}`
+           : `https://finance.yahoo.com/lookup/?s=${encodeURIComponent(name)}`;
+}
+function companyChip(c, kind){
+  const name=c[0], reg=c[1], listed=reg!=="PRI";
+  if(kind==="tag"){
+    return listed
+      ? `<a class="tag slink" data-stock="${name}" href="${stockURL(name)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${name}<span class="ext">↗</span></a>`
+      : `<span class="tag unlisted">${name}</span>`;
+  }
+  const regHTML=`<span class="reg">${regName[reg]||reg}</span>`;
+  return listed
+    ? `<a class="company slink" data-stock="${name}" href="${stockURL(name)}" target="_blank" rel="noopener">${name}${regHTML}<span class="ext">↗</span></a>`
+    : `<span class="company unlisted">${name}${regHTML}</span>`;
+}
+function refreshStockLinks(){
+  document.querySelectorAll("[data-stock]").forEach(a=>{ a.href=stockURL(a.getAttribute("data-stock")); });
+}
+
 // 反向索引：down[x] = 哪些节点把 x 当作上游
 const downMap = {};
 NODES.forEach(n=>(n.up||[]).forEach(u=>{(downMap[u]=downMap[u]||[]).push(n.id)}));
@@ -611,7 +693,7 @@ NODES.forEach(n=>{
   el.innerHTML=`
     <div class="node-name">${n.name}${badges}</div>
     <div class="node-mini">${n.mini}</div>
-    <div class="tags">${n.companies.slice(0,3).map(c=>`<span class="tag">${c[0]}</span>`).join("")}</div>`;
+    <div class="tags">${n.companies.slice(0,3).map(c=>companyChip(c,"tag")).join("")}</div>`;
   host.appendChild(el);
   el.addEventListener("mouseenter",()=>highlight(n.id));
   el.addEventListener("mouseleave",()=>{ if(!filterActive) clearHL(); else applyFilter(); });
@@ -707,6 +789,15 @@ document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
   applyFilter();
 }));
 
+/* ====== 股价数据源切换 ====== */
+const provSel=document.getElementById("provider");
+provSel.value=provider;
+provSel.addEventListener("change",()=>{
+  provider=provSel.value;
+  localStorage.setItem("stockProvider",provider);
+  refreshStockLinks();
+});
+
 /* ====== 详情抽屉 ====== */
 const overlay=document.getElementById("overlay");
 const drawer=document.getElementById("drawer");
@@ -729,8 +820,8 @@ function openDrawer(id){
 
   document.getElementById("d-body").innerHTML=`
     <div class="sec"><h4>产业链定位</h4><p>${n.role}</p></div>
-    <div class="sec"><h4>代表企业</h4><div class="company-grid">
-      ${n.companies.map(c=>`<span class="company">${c[0]}<span class="reg">${regName[c[1]]||c[1]}</span></span>`).join("")}
+    <div class="sec"><h4>代表企业 <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">（点击↗看股价）</span></h4><div class="company-grid">
+      ${n.companies.map(c=>companyChip(c,"company")).join("")}
     </div></div>
     ${relHTML(ups,"⬆ 上游供应（采购自）")}
     ${relHTML(downs,"⬇ 下游需求（供货给）")}
