@@ -139,6 +139,22 @@
   .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px}
   .legend span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
   .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+  .policy{margin-top:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+  .policy summary{cursor:pointer;list-style:none;padding:11px 16px;font-size:13px;font-weight:600;
+    display:flex;align-items:center;gap:8px;user-select:none}
+  .policy summary::-webkit-details-marker{display:none}
+  .policy summary .chev{color:var(--muted);transition:.2s;font-size:11px}
+  .policy[open] summary .chev{transform:rotate(90deg)}
+  .policy summary .pin{font-size:10.5px;font-weight:700;color:#0a0e1a;background:var(--accent);padding:2px 8px;border-radius:6px}
+  .policy-body{padding:2px 16px 16px;font-size:12.5px;color:#c7d2e6;line-height:1.7}
+  .policy-body ul{margin:6px 0 10px;padding-left:18px}
+  .policy-body li{margin-bottom:7px}
+  .policy-body .doc{color:#fff;font-weight:600}
+  .policy-body .num{color:#fbbf24;font-family:ui-monospace,Menlo,monospace;font-size:11.5px}
+  .policy-body .note{margin-top:6px;padding:9px 12px;border-left:3px solid var(--adv);
+    background:rgba(20,184,166,.08);border-radius:0 8px 8px 0;color:#a7d8d0}
+  .policy-body a{color:var(--accent);text-decoration:none}
+  .policy-body a:hover{text-decoration:underline}
   @media(max-width:640px){
     .drawer{width:100%}
     header{padding:18px}
@@ -150,7 +166,7 @@
 <header>
   <h1>算力网产业结构互动图</h1>
   <div class="sub">
-    围绕国家"<b>东数西算</b>"工程与新一轮万亿级算力网投资，按 <b>下游 → 上游</b> 的顺序拆解算力网产业链：
+    围绕国家"<b>东数西算</b>"工程与"<b>全国一体化算力网</b>"建设（"东数西算"每年带动投资约 <b>4000 亿元人民币</b>），按 <b>下游 → 上游</b> 的顺序拆解算力网产业链：
     从<b>数据中心与算力服务</b>，到<b>基础设施与设备</b>，再到<b>核心芯片与元器件</b>、<b>半导体供应链基石</b>，
     并进一步下钻到<b>设备核心零部件、高端材料</b>与最底层的<b>核心原料与战略资源</b>，定位真正的卡脖子节点。
     点击任一环节查看详情；悬停可高亮其上下游关联；红标为<b style="color:#ff6b6b">卡脖子</b>，青标为中国<b style="color:#2dd4bf">主导/反制</b>环节。
@@ -164,6 +180,25 @@
     <span><i style="background:var(--L6)"></i>底层 · 核心原料与战略资源</span>
     <span><i style="background:var(--adv)"></i>中国主导 / 反制筹码</span>
   </div>
+
+  <details class="policy">
+    <summary><span class="chev">▶</span><span class="pin">政策依据</span>构建"算力网"的核心政策与投资金额（已联网核实）</summary>
+    <div class="policy-body">
+      <ul>
+        <li><span class="doc">《关于深入实施"东数西算"工程加快构建全国一体化算力网的实施意见》</span>
+          —— 国家发改委等部门印发，首次以"<b>算力网</b>"统领全国算力一体化布局，是后续行动计划的总纲依据。</li>
+        <li><span class="doc">"东数西算"工程</span>（<a href="https://www.gov.cn/xinwen/2022-02/17/content_5674322.htm" target="_blank" rel="noopener">2022 年 2 月 17 日全面启动</a>，发改委、网信办、工信部、国家能源局）
+          —— 布局 <b>8 大国家算力枢纽节点 + 10 个数据中心集群</b>；据权威测算<b>每年带动投资约 4000 亿元人民币</b>，首批项目总投资即超 4000 亿元。</li>
+        <li><span class="doc">《算力基础设施高质量发展行动计划》</span> <span class="num">工信部联通信〔2023〕180 号</span>（<a href="https://www.gov.cn/zhengce/zhengceku/202310/content_6907900.htm" target="_blank" rel="noopener">六部门，2023-10</a>）
+          —— 目标：到 2025 年算力规模 <b>超 300 EFLOPS</b>、智能算力占比 <b>35%</b>、存储总量 <b>超 1800 EB</b>。</li>
+        <li><span class="doc">《算力互联互通行动计划》</span> <span class="num">工信部信管〔2025〕119 号</span>（<a href="https://www.gov.cn/zhengce/zhengceku/202505/content_7025968.htm" target="_blank" rel="noopener">工信部，2025-05</a>）
+          —— 让算力像水电一样流通：到 2028 年基本建成"<b>算力互联网</b>"。截至 2026 年 1 月，"1+M+N"节点体系已接入 31 省 155 家企业、316 EFLOPS 智算、72 万张 GPU。</li>
+      </ul>
+      <div class="note">
+        ⚠ 关于"几万亿美元"的说明：官方投资额均以<b>人民币</b>计——"东数西算"每年带动约 4000 亿元（≈550 亿美元），多年累计可达<b>万亿元人民币</b>量级；目前并无单一以"万亿美元"计的政策文件，"几万亿美元"系坊间对累计投资的夸大概括。
+      </div>
+    </div>
+  </details>
 </header>
 
 <div class="toolbar">
@@ -189,7 +224,8 @@
 
 <footer>
   数据为产业结构示意，代表企业列举不构成投资建议；标注的"卡脖子 / 国产突破 / 中国主导"为公开行业共识的概括。<br>
-  企业标签后括号：A=A股，HK=港股，US=美股，PRI=非上市/政府平台，FOR=海外厂商。
+  企业标签后括号：A=A股，HK=港股，US=美股，PRI=非上市/政府平台，FOR=海外厂商。<br>
+  政策文号与金额已于 2026-06 联网核实，来源为中国政府网、国家发改委、工信部等官方发布；点击"政策依据"展开查看原文链接。
 </footer>
 
 <!-- 详情抽屉 -->
